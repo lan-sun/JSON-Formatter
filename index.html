@@ -232,6 +232,28 @@
     .pane + .pane{ border-left: none; border-top: 1px solid var(--border); }
     .editor-wrap{ height: 320px; }
   }
+
+  .toast{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--success);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity .2s ease, transform .2s ease;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .toast.show{
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -292,6 +314,8 @@
 
   <footer>格式化 / 驗證 / 壓縮皆由內建的原生 JSON 解析器完成，不依賴瀏覽器內建錯誤訊息，也不使用任何第三方函式庫。</footer>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
@@ -549,8 +573,19 @@
   var statusBadge = document.getElementById("statusBadge");
   var statusText = document.getElementById("statusText");
   var statusMeta = document.getElementById("statusMeta");
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
 
   var LINE_HEIGHT = 21; // px，需與 CSS 中 line-height 一致
+
+  function showToast(text){
+    toastEl.textContent = text;
+    toastEl.classList.add("show");
+    if (toastTimer){ clearTimeout(toastTimer); }
+    toastTimer = setTimeout(function(){
+      toastEl.classList.remove("show");
+    }, 2000);
+  }
 
   function renderLineNumbers(target, textValue, errorLine){
     var lineCount = textValue.split("\n").length;
@@ -714,6 +749,7 @@
     if (navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(text).then(function(){
         setStatus("ok", "已複製結果到剪貼簿", "");
+        showToast("複製成功!");
       }, function(){
         fallbackCopy();
       });
@@ -728,6 +764,7 @@
     try {
       document.execCommand("copy");
       setStatus("ok", "已複製結果到剪貼簿", "");
+      showToast("複製成功!");
     } catch (e){
       setStatus("err", "複製失敗，請手動選取並複製。", "");
     }
